@@ -13,6 +13,9 @@ A lightweight and powerful Svelte wrapper for Apache ECharts with full TypeScrip
 - 🎨 **Customizable** - Extend the base class to create custom chart components
 - ⚡ **Performance Optimized** - Lazy loading and efficient rendering
 - 🔄 **Reactive** - Seamlessly integrates with Svelte's reactivity system
+- 🖱️ **Rich Event Support** - Click, double-click, right-click, and mouse events
+- 📋 **Context Menu** - Built-in support for custom context menus
+- 🎯 **Interactive** - Highlight, tooltip, and selection capabilities
 
 ## 📦 Installation
 
@@ -87,41 +90,88 @@ export class LineChart extends UnifaceChart {
 
 ### ChartPanel Component
 
-#### Props
+#### Event Support
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `chart` | `UnifaceChart` | Chart instance to render |
+| Event Type | Description | Handler |
+|------------|-------------|---------|
+| `onClick` | Single click on chart elements | `(params) => void` |
+| `onDoubleClick` | Double click on chart elements | `(params) => void` |
+| `onRightClick` | Right click on chart elements | `(params) => void` |
+| `onMouseOver` | Mouse hover over elements | `(params) => void` |
+
+#### Interactive Methods
+
+| Method | Description | Parameters |
+|--------|-------------|------------|
+| `setEventHandlers(handlers)` | Set multiple event handlers | `handlers` - Event handler object |
+| `addEventListener(type, handler)` | Add single event handler | `type` - Event type, `handler` - Function |
+| `removeEventListener(type)` | Remove event handler | `type` - Event type |
+| `highlight(seriesIndex?, dataIndex?)` | Highlight data point | Series and data indices |
+| `downplay(seriesIndex?, dataIndex?)` | Remove highlight | Series and data indices |
+| `showTip(seriesIndex, dataIndex)` | Show tooltip | Series and data indices |
+| `hideTip()` | Hide tooltip | - |
 
 ## 🎨 Advanced Usage
 
-### Custom Chart with Data Binding
+### Custom Chart with Event Handling
 
 ```typescript
-export class DynamicChart extends UnifaceChart {
-  private data: any[] = [];
-  
-  setData(newData: any[]) {
-    this.data = newData;
-    this.invalidate(); // Refresh chart
-  }
-  
+export class InteractiveChart extends UnifaceChart {
   protected createOption(): any {
     return {
       // ... your chart configuration
       series: [{
-        data: this.data
+        data: [120, 200, 150, 80, 70, 110]
       }]
     };
   }
   
   protected postInitialize(chart: any): void {
-    // Add click event handler
-    chart.on('click', (params: any) => {
-      console.log('Chart clicked:', params);
+    // Set up event handlers
+    this.setEventHandlers({
+      onClick: (params) => {
+        console.log('Chart clicked:', params);
+        this.highlight(params.seriesIndex, params.dataIndex);
+      },
+      onDoubleClick: (params) => {
+        alert(`Double clicked: ${params.name} = ${params.value}`);
+      },
+      onRightClick: (params) => {
+        console.log('Right clicked:', params);
+        // Show custom context menu
+      },
+      onMouseOver: (params) => {
+        this.showTip(params.seriesIndex, params.dataIndex);
+      }
     });
   }
 }
+```
+
+### Event Handler Methods
+
+```typescript
+// Set multiple event handlers
+chart.setEventHandlers({
+  onClick: (params) => { /* handle click */ },
+  onDoubleClick: (params) => { /* handle double click */ },
+  onRightClick: (params) => { /* handle right click */ }
+});
+
+// Add single event handler
+chart.addEventListener('onClick', (params) => {
+  console.log('Clicked:', params);
+});
+
+// Remove event handler
+chart.removeEventListener('onClick');
+
+// Interactive methods
+chart.highlight(seriesIndex, dataIndex);  // Highlight data point
+chart.downplay();                         // Remove highlight
+chart.showTip(seriesIndex, dataIndex);    // Show tooltip
+chart.hideTip();                          // Hide tooltip
+```
 ```
 
 ### Responsive Chart

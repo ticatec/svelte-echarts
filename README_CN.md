@@ -1,4 +1,4 @@
-# @ticatec/svelte-echarts
+# uniface-echarts
 
 [English](README.md) | [中文](README_CN.md)
 
@@ -13,11 +13,14 @@
 - 🎨 **可定制** - 扩展基类创建自定义图表组件
 - ⚡ **性能优化** - 延迟加载和高效渲染
 - 🔄 **响应式** - 与 Svelte 响应式系统无缝集成
+- 🖱️ **丰富事件支持** - 支持点击、双击、右键和鼠标事件
+- 📋 **上下文菜单** - 内置自定义上下文菜单支持
+- 🎯 **交互式** - 高亮、工具提示和选择功能
 
 ## 📦 安装
 
 ```bash
-npm install @ticatec/svelte-echarts
+npm install @ticatec/uniface-echarts
 ```
 
 ## 🚀 快速开始
@@ -25,7 +28,7 @@ npm install @ticatec/svelte-echarts
 1. **创建自定义图表类：**
 
 ```typescript
-import UnifaceChart from '@ticatec/svelte-echarts';
+import UnifaceChart from '@ticatec/uniface-echarts';
 
 export class LineChart extends UnifaceChart {
   protected createOption(): any {
@@ -52,7 +55,7 @@ export class LineChart extends UnifaceChart {
 
 ```svelte
 <script>
-  import ChartPanel from '@ticatec/svelte-echarts';
+  import ChartPanel from '@ticatec/uniface-echarts';
   import { LineChart } from './LineChart';
   
   const chart = new LineChart();
@@ -87,72 +90,224 @@ export class LineChart extends UnifaceChart {
 
 ### ChartPanel 组件
 
-#### 属性
+#### 事件支持
 
-| 属性 | 类型 | 描述 |
+| 事件类型 | 描述 | 处理器 |
+|----------|------|--------|
+| `onClick` | 单击图表元素 | `(params) => void` |
+| `onDoubleClick` | 双击图表元素 | `(params) => void` |
+| `onRightClick` | 右键点击图表元素 | `(params) => void` |
+| `onMouseOver` | 鼠标悬停在元素上 | `(params) => void` |
+
+#### 交互方法
+
+| 方法 | 描述 | 参数 |
 |------|------|------|
-| `chart` | `UnifaceChart` | 要渲染的图表实例 |
+| `setEventHandlers(handlers)` | 设置多个事件处理器 | `handlers` - 事件处理器对象 |
+| `addEventListener(type, handler)` | 添加单个事件处理器 | `type` - 事件类型, `handler` - 处理函数 |
+| `removeEventListener(type)` | 移除事件处理器 | `type` - 事件类型 |
+| `highlight(seriesIndex?, dataIndex?)` | 高亮数据点 | 系列和数据索引 |
+| `downplay(seriesIndex?, dataIndex?)` | 取消高亮 | 系列和数据索引 |
+| `showTip(seriesIndex, dataIndex)` | 显示工具提示 | 系列和数据索引 |
+| `hideTip()` | 隐藏工具提示 | - |
 
 ## 🎨 高级用法
 
-### 带数据绑定的自定义图表
+### 带事件处理的自定义图表
 
 ```typescript
-export class DynamicChart extends UnifaceChart {
-  private data: any[] = [];
-  
-  setData(newData: any[]) {
-    this.data = newData;
-    this.invalidate(); // 刷新图表
-  }
-  
+export class InteractiveChart extends UnifaceChart {
   protected createOption(): any {
     return {
       // ... 你的图表配置
       series: [{
-        data: this.data
+        data: [120, 200, 150, 80, 70, 110]
       }]
     };
   }
   
   protected postInitialize(chart: any): void {
-    // 添加点击事件处理器
-    chart.on('click', (params: any) => {
-      console.log('图表被点击:', params);
+    // 设置事件处理器
+    this.setEventHandlers({
+      onClick: (params) => {
+        console.log('图表被点击:', params);
+        this.highlight(params.seriesIndex, params.dataIndex);
+      },
+      onDoubleClick: (params) => {
+        alert(`双击了: ${params.name} = ${params.value}`);
+      },
+      onRightClick: (params) => {
+        console.log('右键点击:', params);
+        // 显示自定义上下文菜单
+      },
+      onMouseOver: (params) => {
+        this.showTip(params.seriesIndex, params.dataIndex);
+      }
     });
   }
 }
 ```
 
-### 响应式图表
+### 事件处理方法
 
-```svelte
-<script>
-  import ChartPanel from '@ticatec/svelte-echarts';
-  import { MyChart } from './MyChart';
-  
-  const chart = new MyChart();
-</script>
+```typescript
+// 设置多个事件处理器
+chart.setEventHandlers({
+  onClick: (params) => { /* 处理点击 */ },
+  onDoubleClick: (params) => { /* 处理双击 */ },
+  onRightClick: (params) => { /* 处理右键点击 */ }
+});
 
-<!-- 图表会自动随容器大小调整 -->
-<div class="chart-container">
-  <ChartPanel {chart} />
-</div>
+// 添加单个事件处理器
+chart.addEventListener('onClick', (params) => {
+  console.log('点击了:', params);
+});
 
-<style>
-  .chart-container {
-    width: 100%;
-    height: 50vh;
-    min-height: 300px;
-  }
-</style>
+// 移除事件处理器
+chart.removeEventListener('onClick');
+
+// 交互方法
+chart.highlight(seriesIndex, dataIndex);  // 高亮数据点
+chart.downplay();                         // 取消高亮
+chart.showTip(seriesIndex, dataIndex);    // 显示工具提示
+chart.hideTip();                          // 隐藏工具提示
 ```
+```
+
+### 交互式图表示例
+
+```typescript
+export class ClickableBarChart extends UnifaceChart {
+  private selectedIndex = -1;
+
+  protected createOption(): any {
+    return {
+      title: { text: '可点击的柱状图' },
+      xAxis: {
+        type: 'category',
+        data: ['产品A', '产品B', '产品C', '产品D']
+      },
+      yAxis: { type: 'value' },
+      series: [{
+        name: '销量',
+        type: 'bar',
+        data: [23, 45, 56, 78],
+        emphasis: {
+          itemStyle: { color: '#ff6b6b' }
+        }
+      }]
+    };
+  }
+
+  protected postInitialize(chart: any): void {
+    this.setEventHandlers({
+      onClick: (params) => {
+        this.selectedIndex = params.dataIndex;
+        this.highlight(params.seriesIndex, params.dataIndex);
+        console.log(`选中了 ${params.name}: ${params.value}`);
+      },
+      onDoubleClick: (params) => {
+        // 双击编辑数据
+        const newValue = prompt(`编辑 ${params.name} 的值:`, params.value);
+        if (newValue) {
+          this.updateData(params.dataIndex, parseInt(newValue));
+        }
+      },
+      onRightClick: (params) => {
+        // 右键菜单
+        this.showContextMenu(params);
+      }
+    });
+  }
+
+  private updateData(index: number, value: number): void {
+    const option = this.createOption();
+    option.series[0].data[index] = value;
+    this.chart.setOption(option);
+  }
+
+  private showContextMenu(params: any): void {
+    const menu = confirm(`对 ${params.name} 执行操作?\n确定: 删除数据\n取消: 复制到剪贴板`);
+    if (menu) {
+      // 删除数据
+      this.removeData(params.dataIndex);
+    } else {
+      // 复制数据
+      navigator.clipboard.writeText(`${params.name}: ${params.value}`);
+    }
+  }
+}
+```
+
+### 实时更新图表
+
+```typescript
+export class LiveChart extends UnifaceChart {
+  private timer: NodeJS.Timeout | null = null;
+  private data: number[] = [0, 0, 0, 0, 0];
+
+  protected createOption(): any {
+    return {
+      title: { text: '实时数据图表' },
+      xAxis: {
+        type: 'category',
+        data: ['A', 'B', 'C', 'D', 'E']
+      },
+      yAxis: { type: 'value', max: 100 },
+      series: [{
+        name: '实时数据',
+        type: 'line',
+        data: this.data,
+        smooth: true,
+        animation: true
+      }]
+    };
+  }
+
+  protected postInitialize(chart: any): void {
+    // 开始实时更新
+    this.startUpdate();
+
+    this.setEventHandlers({
+      onClick: (params) => {
+        // 点击暂停/恢复更新
+        if (this.timer) {
+          this.stopUpdate();
+          console.log('暂停更新');
+        } else {
+          this.startUpdate();
+          console.log('恢复更新');
+        }
+      }
+    });
+  }
+
+  private startUpdate(): void {
+    this.timer = setInterval(() => {
+      // 更新数据
+      this.data = this.data.map(() => Math.floor(Math.random() * 100));
+      this.invalidate();
+    }, 1000);
+  }
+
+  private stopUpdate(): void {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  public dispose(): void {
+    this.stopUpdate();
+    super.dispose();
+  }
+}
 
 ### 多图表示例
 
 ```svelte
 <script>
-  import ChartPanel from '@ticatec/svelte-echarts';
+  import ChartPanel from '@ticatec/uniface-echarts';
   import { LineChart, BarChart, PieChart } from './charts';
   
   const lineChart = new LineChart();
@@ -247,26 +402,6 @@ export class RobustChart extends UnifaceChart {
 - Svelte >= 5.0.0
 - ECharts >= 6.0.0
 
-## 🛠️ 开发
-
-```bash
-# 克隆仓库
-git clone https://github.com/ticatec/svelte-echarts.git
-cd svelte-echarts
-
-# 安装依赖
-npm install
-
-# 开发模式
-npm run dev
-
-# 构建
-npm run build
-
-# 发布
-npm run publish:public
-```
-
 ## 📄 许可证
 
 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
@@ -283,10 +418,10 @@ MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
 ## 📞 技术支持
 
-- **问题反馈**：[GitHub Issues](https://github.com/ticatec/svelte-echarts/issues)
-- **功能请求**：[GitHub Discussions](https://github.com/ticatec/svelte-echarts/discussions)
-- **文档**：[完整文档](https://github.com/ticatec/svelte-echarts#readme)
-- **示例**：[在线示例](https://svelte-echarts-demo.ticatec.com)
+- **问题反馈**：[GitHub Issues](https://github.com/ticatec/uniface-echarts/issues)
+- **功能请求**：[GitHub Discussions](https://github.com/ticatec/uniface-echarts/discussions)
+- **文档**：[完整文档](https://github.com/ticatec/uniface-echarts#readme)
+- **示例**：[在线示例](https://uniface-echarts-demo.ticatec.com)
 
 ## 🙏 致谢
 
