@@ -1,6 +1,9 @@
 # @ticatec/uniface-echarts
 
-[English](README.md) | [中文](README_CN.md)
+[![Version](https://img.shields.io/npm/v/@ticatec/uniface-echarts)](https://www.npmjs.com/package/@ticatec/uniface-echarts)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+English| [中文](README_CN.md)
 
 A lightweight and powerful Svelte wrapper for Apache ECharts with full TypeScript support. Create beautiful, interactive charts with ease.
 

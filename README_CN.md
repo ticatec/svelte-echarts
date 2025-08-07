@@ -1,6 +1,9 @@
 # uniface-echarts
 
-[English](README.md) | [中文](README_CN.md)
+[![Version](https://img.shields.io/npm/v/@ticatec/uniface-echarts)](https://www.npmjs.com/package/@ticatec/uniface-echarts)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[English](README.md) | 中文
 
 一个轻量级且功能强大的 Apache ECharts Svelte 封装库，完全支持 TypeScript。轻松创建美观、交互式的图表。
 
